@@ -63,7 +63,7 @@ router.get("/products", (req, res) => {
 });
 
 router.post("/products", upload.array("images", 5), async (req, res) => {
-  const { name, description, price, stock, category, active } = req.body;
+  const { name, description, price, stock, category, gender, active } = req.body;
 
   if (!name || price === undefined) {
     return res.status(400).json({ error: "Nombre y precio son obligatorios" });
@@ -79,6 +79,7 @@ router.post("/products", upload.array("images", 5), async (req, res) => {
     price: Number(price),
     stock: Number(stock) || 0,
     category: category || "General",
+    gender: gender || "Unisex",
     images,
     active: active === undefined ? true : active === "true" || active === true,
     createdAt: now,
@@ -97,13 +98,14 @@ router.put("/products/:id", upload.array("images", 5), async (req, res) => {
     return res.status(404).json({ error: "Producto no encontrado" });
   }
 
-  const { name, description, price, stock, category, active } = req.body;
+  const { name, description, price, stock, category, gender, active } = req.body;
 
   if (name !== undefined) product.name = name;
   if (description !== undefined) product.description = description;
   if (price !== undefined) product.price = Number(price);
   if (stock !== undefined) product.stock = Number(stock);
   if (category !== undefined) product.category = category;
+  if (gender !== undefined) product.gender = gender;
   if (active !== undefined) product.active = active === "true" || active === true;
 
   if (req.files && req.files.length > 0) {

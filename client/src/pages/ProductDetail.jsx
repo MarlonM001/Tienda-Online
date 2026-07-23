@@ -68,7 +68,12 @@ export default function ProductDetail() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-          <span className="tag tag-accent" style={{ alignSelf: "flex-start" }}>{product.category}</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            <span className="tag tag-accent">{product.category}</span>
+            {product.gender && product.gender !== "Unisex" && (
+              <span className="tag tag-outline">{product.gender}</span>
+            )}
+          </div>
           <h1 style={{ fontFamily: "var(--font-heading)", fontSize: 36, margin: 0, color: "var(--color-text)" }}>
             {product.name}
           </h1>

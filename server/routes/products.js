@@ -4,12 +4,18 @@ import db from "../data/db.js";
 const router = Router();
 
 router.get("/", (req, res) => {
-  const { category, search } = req.query;
+  const { category, gender, search } = req.query;
   let products = db.data.products.filter((p) => p.active);
 
   if (category) {
     products = products.filter(
       (p) => p.category.toLowerCase() === String(category).toLowerCase()
+    );
+  }
+
+  if (gender) {
+    products = products.filter(
+      (p) => (p.gender || "Unisex").toLowerCase() === String(gender).toLowerCase()
     );
   }
 

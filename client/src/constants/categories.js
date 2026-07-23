@@ -1,1 +1,3 @@
-export const CATEGORIES = ["Tecnología", "Moda", "Hogar", "Deportes", "Belleza", "Accesorios"];
+export const CATEGORIES = ["Ropa Urbana", "Ropa Deportiva", "Gorras"];
+
+export const GENDERS = ["Hombre", "Mujer", "Unisex"];

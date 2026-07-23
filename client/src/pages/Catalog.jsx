@@ -1,17 +1,37 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import { MapPin, MessageCircle, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MapPin, MessageCircle, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getProducts } from "../api/products";
 import ProductGrid from "../components/product/ProductGrid";
-import Spinner from "../components/ui/Spinner";
-import Carousel from "../components/ui/Carousel";
+import ProductCardSkeleton from "../components/product/ProductCardSkeleton";
 import { getImageUrl } from "../utils/getImageUrl";
 import { CATEGORIES } from "../constants/categories";
 
 const EASE = [0.16, 1, 0.3, 1];
 const HERO_CATEGORIES = CATEGORIES.slice(0, 4);
 const WHATSAPP_NUMBER = import.meta.env.VITE_STORE_WHATSAPP_NUMBER;
+
+const HERO_SLIDES = [
+  {
+    badge: "¡Gracias por acompañarnos en nuestra inauguración!",
+    title: "Todo lo que buscás, entregado en la puerta de tu casa",
+    text: "Ropa urbana, ropa deportiva y gorras. Pedí por WhatsApp o pagá contraentrega, sin vueltas.",
+    category: null,
+  },
+  {
+    badge: "Nueva colección",
+    title: "Estilo urbano que se nota",
+    text: "Hoodies, camisetas oversize y gorras pensadas para el día a día en la ciudad.",
+    category: "Ropa Urbana",
+  },
+  {
+    badge: "Entrená con actitud",
+    title: "Ropa deportiva para hombre y mujer",
+    text: "Comodidad y rendimiento para tus rutinas, sin sacrificar estilo.",
+    category: "Ropa Deportiva",
+  },
+];
 
 const REVIEWS = [
   { name: "Camila R.", text: "Pedí por WhatsApp y el mismo día ya tenía el pedido confirmado. Llegó rápido a Yopal.", stars: 5 },
@@ -49,7 +69,19 @@ export default function Catalog({ query, onQueryChange }) {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
   const category = searchParams.get("cat");
-  const setCategory = (cat) => setSearchParams(cat ? { cat } : {});
+  const gender = searchParams.get("genero");
+  const setCategory = (cat) => {
+    const next = {};
+    if (cat) next.cat = cat;
+    if (gender) next.genero = gender;
+    setSearchParams(next);
+  };
+  const setGender = (g) => {
+    const next = {};
+    if (category) next.cat = category;
+    if (g) next.genero = g;
+    setSearchParams(next);
+  };
 
   useEffect(() => {
     getProducts()
@@ -62,18 +94,40 @@ export default function Catalog({ query, onQueryChange }) {
     .filter(Boolean)
     .slice(0, 6);
 
+  const [heroSlide, setHeroSlide] = useState(0);
+  const [heroPaused, setHeroPaused] = useState(false);
+
+  useEffect(() => {
+    if (heroPaused) return;
+    const timer = setInterval(() => {
+      setHeroSlide((s) => (s + 1) % HERO_SLIDES.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroPaused]);
+
+  const heroPrev = () => setHeroSlide((s) => (s - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+  const heroNext = () => setHeroSlide((s) => (s + 1) % HERO_SLIDES.length);
+
+  const currentSlide = HERO_SLIDES[heroSlide];
+  const slideImage =
+    getImageUrl(products.find((p) => p.category === currentSlide.category)?.images?.[0]) ||
+    heroImages[0];
+
   const q = query.trim().toLowerCase();
   const filtered = products.filter(
     (p) =>
       (!q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)) &&
-      (!category || p.category === category)
+      (!category || p.category === category) &&
+      (!gender || (p.gender || "Unisex") === gender)
   );
 
   return (
     <div style={{ animation: "pageFade 0.4s ease both" }}>
       {/* Hero */}
       <div
-        className="blueprint"
+        className="blueprint hero-bg"
+        onMouseEnter={() => setHeroPaused(true)}
+        onMouseLeave={() => setHeroPaused(false)}
         style={{
           position: "relative",
           borderBottom: "1px solid var(--color-divider)",
@@ -86,6 +140,74 @@ export default function Catalog({ query, onQueryChange }) {
         <i className="corner tr"></i>
         <i className="corner bl"></i>
         <i className="corner br"></i>
+
+        <button
+          onClick={heroPrev}
+          aria-label="Diapositiva anterior"
+          className="btn btn-icon"
+          style={{
+            position: "absolute",
+            left: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            borderRadius: "50%",
+            background: "color-mix(in srgb, #000 40%, transparent)",
+            border: "none",
+            color: "#fff",
+          }}
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          onClick={heroNext}
+          aria-label="Siguiente diapositiva"
+          className="btn btn-icon"
+          style={{
+            position: "absolute",
+            right: 12,
+            top: "50%",
+            transform: "translateY(-50%)",
+            zIndex: 2,
+            borderRadius: "50%",
+            background: "color-mix(in srgb, #000 40%, transparent)",
+            border: "none",
+            color: "#fff",
+          }}
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        <div
+          style={{
+            position: "absolute",
+            bottom: 10,
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 6,
+            zIndex: 2,
+          }}
+        >
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setHeroSlide(i)}
+              aria-label={`Ir a la diapositiva ${i + 1}`}
+              style={{
+                width: i === heroSlide ? 18 : 7,
+                height: 7,
+                borderRadius: 999,
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                background: i === heroSlide ? "var(--color-accent)" : "color-mix(in srgb, var(--color-text) 30%, transparent)",
+                transition: "width 0.25s ease, background 0.25s ease",
+              }}
+            />
+          ))}
+        </div>
+
         <div
           className="hero-grid"
           style={{
@@ -93,52 +215,36 @@ export default function Catalog({ query, onQueryChange }) {
             margin: "0 auto",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left", gap: "var(--space-2)" }}>
-            <motion.span
-              className="tag tag-accent"
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: EASE }}
-            >
-              ¡Gracias por acompañarnos en nuestra inauguración!
-            </motion.span>
-            <motion.h1
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.08, ease: EASE }}
-              style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 42, letterSpacing: "0.01em", margin: 0, color: "var(--color-text)" }}
-            >
-              Todo lo que buscás, entregado en la puerta de tu casa
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.16, ease: EASE }}
-              style={{ fontSize: 16, opacity: 0.7, margin: 0, maxWidth: 480 }}
-            >
-              Tecnología, moda, hogar, deporte y belleza. Pedí por WhatsApp o pagá contraentrega, sin
-              vueltas.
-            </motion.p>
-
+          <AnimatePresence mode="wait">
             <motion.div
+              key={heroSlide}
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.24, ease: EASE }}
-              style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)", flexWrap: "wrap" }}
+              exit={{ opacity: 0, y: -14 }}
+              transition={{ duration: 0.4, ease: EASE }}
+              style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left", gap: "var(--space-2)" }}
             >
-              <a href="#catalogo" className="btn btn-primary">
-                Ver catálogo
-              </a>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola, quiero más información sobre sus productos")}`}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-secondary"
-              >
-                Pedir por WhatsApp
-              </a>
+              <span className="tag tag-accent">{currentSlide.badge}</span>
+              <h1 style={{ fontFamily: "var(--font-heading)", fontWeight: 600, fontSize: 42, letterSpacing: "0.01em", margin: 0, color: "var(--color-text)" }}>
+                {currentSlide.title}
+              </h1>
+              <p style={{ fontSize: 16, opacity: 0.7, margin: 0, maxWidth: 480 }}>{currentSlide.text}</p>
+
+              <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)", flexWrap: "wrap" }}>
+                <a href="#catalogo" className="btn btn-primary">
+                  Ver catálogo
+                </a>
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("Hola, quiero más información sobre sus productos")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary"
+                >
+                  Pedir por WhatsApp
+                </a>
+              </div>
             </motion.div>
-          </div>
+          </AnimatePresence>
 
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "var(--space-6) 0", position: "relative" }}>
             <motion.div
@@ -161,13 +267,24 @@ export default function Catalog({ query, onQueryChange }) {
               <i className="corner tr"></i>
               <i className="corner bl"></i>
               <i className="corner br"></i>
-              {heroImages.length > 0 ? (
-                <Carousel images={heroImages} />
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", opacity: 0.6, fontSize: 13 }}>
-                  Foto destacada de producto
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {slideImage ? (
+                  <motion.img
+                    key={heroSlide}
+                    src={slideImage}
+                    alt=""
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: EASE }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <div key="empty" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", opacity: 0.6, fontSize: 13 }}>
+                    Foto destacada de producto
+                  </div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {HERO_CATEGORIES.map((cat, i) => {
@@ -240,6 +357,7 @@ export default function Catalog({ query, onQueryChange }) {
                     <img
                       src={image}
                       alt={cat}
+                      className="category-tile-img"
                       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                     />
                   ) : (
@@ -294,9 +412,25 @@ export default function Catalog({ query, onQueryChange }) {
           ))}
         </div>
 
+        {category === "Ropa Deportiva" && (
+          <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", marginBottom: "var(--space-4)" }}>
+            <span className={!gender ? "tag tag-accent" : "tag tag-outline"} onClick={() => setGender(null)}>
+              Todos
+            </span>
+            <span className={gender === "Hombre" ? "tag tag-accent" : "tag tag-outline"} onClick={() => setGender("Hombre")}>
+              Hombre
+            </span>
+            <span className={gender === "Mujer" ? "tag tag-accent" : "tag tag-outline"} onClick={() => setGender("Mujer")}>
+              Mujer
+            </span>
+          </div>
+        )}
+
         {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "var(--space-6) 0" }}>
-            <Spinner />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: "var(--space-4)" }}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
           </div>
         ) : (
           <ProductGrid products={filtered} />
@@ -305,6 +439,7 @@ export default function Catalog({ query, onQueryChange }) {
 
       {/* Reseñas */}
       <div
+        className="section-glow"
         style={{
           background: "var(--color-surface)",
           borderTop: "1px solid var(--color-divider)",
@@ -339,8 +474,8 @@ export default function Catalog({ query, onQueryChange }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.45, delay: i * 0.08, ease: EASE }}
-                className="card blueprint elev-sm"
-                style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-2)" }}
+                className="card blueprint elev-sm review-card"
+                style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-2)", background: "var(--color-bg)" }}
               >
                 <i className="corner tl"></i>
                 <i className="corner tr"></i>

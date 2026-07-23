@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { X, Minus, Plus } from "lucide-react";
 import { useCart } from "../../context/CartContext";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -69,8 +70,17 @@ export default function CartDrawer() {
               Tu carrito está vacío.
             </p>
           )}
+          <AnimatePresence initial={false}>
           {items.map((line) => (
-            <div key={line.productId} style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+            <motion.div
+              key={line.productId}
+              layout
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}
+            >
               <img
                 src={getImageUrl(line.image) || undefined}
                 alt={line.name}
@@ -99,8 +109,9 @@ export default function CartDrawer() {
               <span style={{ fontSize: 13, fontWeight: 700, color: "var(--color-accent-700)" }}>
                 {formatCurrency(line.price * line.quantity)}
               </span>
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
 
         <div

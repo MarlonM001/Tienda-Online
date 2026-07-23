@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { CATEGORIES, GENDERS } from "../../constants/categories";
 
 const initialState = {
   name: "",
@@ -6,6 +7,7 @@ const initialState = {
   price: "",
   stock: "",
   category: "",
+  gender: "Unisex",
   active: true,
 };
 
@@ -24,6 +26,7 @@ export default function ProductForm({ initial, onSubmit, onCancel, submitting })
     formData.append("price", form.price);
     formData.append("stock", form.stock);
     formData.append("category", form.category);
+    formData.append("gender", form.gender);
     formData.append("active", form.active);
     files.forEach((file) => formData.append("images", file));
     onSubmit(formData);
@@ -67,12 +70,34 @@ export default function ProductForm({ initial, onSubmit, onCancel, submitting })
           className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm bg-white text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
         />
       </div>
-      <input
-        placeholder="Categoría"
-        value={form.category}
-        onChange={handleChange("category")}
-        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm bg-white text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <select
+          required
+          value={form.category}
+          onChange={handleChange("category")}
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm bg-white text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        >
+          <option value="" disabled>
+            Selecciona categoría
+          </option>
+          {CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+        <select
+          value={form.gender}
+          onChange={handleChange("gender")}
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm bg-white text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
+        >
+          {GENDERS.map((g) => (
+            <option key={g} value={g}>
+              {g}
+            </option>
+          ))}
+        </select>
+      </div>
       <input
         type="file"
         multiple

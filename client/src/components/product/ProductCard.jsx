@@ -37,6 +37,7 @@ export default function ProductCard({ product, delayMs = 0 }) {
             <img
               src={image}
               alt={product.name}
+              className="product-card-img"
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           ) : (
@@ -51,7 +52,12 @@ export default function ProductCard({ product, delayMs = 0 }) {
           )}
         </div>
         <div style={{ padding: "var(--space-3)", display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-          <span className="tag tag-accent" style={{ alignSelf: "flex-start" }}>{product.category}</span>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <span className="tag tag-accent">{product.category}</span>
+            {product.gender && product.gender !== "Unisex" && (
+              <span className="tag tag-outline">{product.gender}</span>
+            )}
+          </div>
           <span style={{ fontFamily: "var(--font-heading)", fontSize: 18, color: "var(--color-text)", lineHeight: 1.2 }}>
             {product.name}
           </span>
@@ -60,10 +66,12 @@ export default function ProductCard({ product, delayMs = 0 }) {
             <span style={{ fontWeight: 700, fontSize: 17, color: "var(--color-accent-700)" }}>
               {formatCurrency(product.price)}
             </span>
-            <button
+            <motion.button
               className="btn btn-secondary"
               style={{ padding: "6px 10px", fontSize: 13 }}
               disabled={outOfStock}
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -72,7 +80,7 @@ export default function ProductCard({ product, delayMs = 0 }) {
               }}
             >
               ¡Lo quiero!
-            </button>
+            </motion.button>
           </div>
         </div>
       </Link>
